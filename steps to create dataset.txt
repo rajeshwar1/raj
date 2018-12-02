@@ -1,0 +1,232 @@
+LINK: https://www.pyimagesearch.com/2017/12/04/how-to-create-a-deep-learning-dataset-using-google-images/
+
+The first step in using Google Images to gather training data for our Convolutional Neural Network is to head to Google Images and enter a query.
+
+In this case we’ll be using the query term “santa clause”:
+Fire up the JavaScript console (I’ll assume you are using the Chrome web browser, but you can use Firefox as well) by clicking View => Developer => JavaScript Console
+From there, click the Console  tab:
+
+Keep scrolling until you have found all relevant images to your query. From there, we need to grab the URLs for each of these images. Switch back to the JavaScript console and then copy and paste this JavaScript snippet into the Console:
+
+var script = document.createElement('script');
+script.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js";
+document.getElementsByTagName('head')[0].appendChild(script);
+press enter
+
+var urls = $('.rg_di .rg_meta').map(function() { return JSON.parse($(this).text()).ou; });
+
+press enter
+// write the URls to file (one per line)
+var textToSave = urls.toArray().join('\n');
+var hiddenElement = document.createElement('a');
+hiddenElement.href = 'data:attachment/text,' + encodeURI(textToSave);
+hiddenElement.target = '_blank';
+hiddenElement.download = 'urls.txt';
+hiddenElement.click();
+
+URL file url.txt is downloaded
+
+Downloading Google Images using Python
+Now that we have our urls.txt  file, we need to download each of the individual images.
+
+Using Python and the requests library, this is quite easy.
+
+If you don’t already have requests installed on your machine you’ll want to install it now (taking care to use the workon  command first if you are using Python virtual environments):
+
+$ workon cv
+$ pip install requests
+
+
+# import the necessary packages
+from imutils import paths
+import argparse
+import requests
+import cv2
+import os
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-u", "--urls", required=True,
+	help="path to file containing image URLs")
+ap.add_argument("-o", "--output", required=True,
+	help="path to output directory of images")
+args = vars(ap.parse_args())
+ 
+# grab the list of URLs from the input file, then initialize the
+# total number of images downloaded thus far
+rows = open(args["urls"]).read().strip().split("\n")
+total = 0
+
+# loop the URLs
+for url in rows:
+	try:
+		# try to download the image
+		r = requests.get(url, timeout=60)
+ 
+		# save the image to disk
+		p = os.path.sep.join([args["output"], "{}.jpg".format(
+			str(total).zfill(8))])
+		f = open(p, "wb")
+		f.write(r.content)
+		f.close()
+ 
+		# update the counter
+		print("[INFO] downloaded: {}".format(p))
+		total += 1
+ 
+	# handle if any exceptions are thrown during the download process
+	except:
+		print("[INFO] error downloading {}...skipping".format(p))
+
+# loop over the image paths we just downloaded
+for imagePath in paths.list_images(args["output"]):
+	# initialize if the image should be deleted or not
+	delete = False
+ 
+	# try to load the image
+	try:
+		image = cv2.imread(imagePath)
+ 
+		# if the image is `None` then we could not properly load it
+		# from disk, so delete it
+		if image is None:
+			delete = True
+ 
+	# if OpenCV cannot load the image then the image is likely
+	# corrupt so we should delete it
+	except:
+		print("Except")
+		delete = True
+ 
+	# check to see if the image should be deleted
+	if delete:
+		print("[INFO] deleting {}".format(imagePath))
+		os.remove(imagePath)
+
+command to run ythe python script
+
+$python download_images.py --urls urls.txt --output images/santa
+$pip install imutils
+$pip install opencv-python
+
+from import .cv2 (error)
+ImportError: libSM.so.6: cannot open shared object file: No such file or directory
+
+run command
+apt update && apt install -y libsm6 libxext6 libxrender-dev
+
+error: ImportError: No module named _tkinter, please install the python-tk package
+apt-get install python-tk
+apt-get install python3-tk for python3 i think sometimes version also required
+
+error: TypeError: softmax() got an unexpected keyword argument 'axis'
+ pip install --upgrade tensorflow
+
+
+
+AttributeError: 'ProgbarLogger' object has no attribute 'log_values'
+solution increase the data size error will be solved
+
+list:
+pip install opencv-python
+apt update && apt install -y libsm6 libxext6 libxrender-dev
+ pip install tqdm
+pip install keras
+pip install matplotlib
+pip install seaborn
+apt-get install python-tk
+pip install --upgrade tensorflow
+
+i typed actiavted tensorflow 
+in tensorflow envoronment i was not able to install packages so i uesd conda i worked.
+
+
+Problem:Val loss and Val accuracy no change and training accuracy fractional change
+First changed the learning rate from 1e-3 to 1e-4 and changed the the optimizer from sgd to adam.
+no change oberverd.
+for two classes same problem i had then i changed the LR to lr-6 then val acc started changing
+
+make changes in image data format value we have to give asdata_format == 'channels_first' or chaneel _last check it in the code to overcome the the problem .
+used vi editor to check the error in the package listed as error and made corrections like removing multiply  
+
+check mayank vasta and rp singh
+Np module named PIL
+pip install PIL
+if not 
+pip install pillow
+then use
+from PIL import Image
+
+Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 (error)
+solution: # Just disables the warning, doesn't enable AVX/FMA
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+error: with keep_dims is deprecated and will be removed in a future version. Instructions for updating: Conv2D TypeError: __init()__ takes at least 4 arguments (4 given)  is deprecated, use keepdims instead
+replace keep_dims with keepdims in the appropraite backend.py tensorflow I think
+
+error:from keras.layers import Flatten, Dense, Input, GlobalAveragePooling2D, \ ImportError: cannot import name multiply
+solution: removed multiply from that file
+
+Error:  UserWarning: Update your `Conv2D` call to the Keras 2 API: `Conv2D(64, (3, 3), name="conv1_1", activation="relu")`
+  model.add(Convolution2D(64, 3, 3, activation='relu', name='conv1_1'))
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Negative dimension size caused by subtracting 2 from 1 for 'max_pooling2d_2/MaxPool' (op: 'MaxPool') with input shapes: [?,1,112,128].
+
+Soliution: pip install keras==1.2.2
+
+Update your `Model` call to the Keras 2 API: `Model(outputs=Tensor("fl..., inputs=Tensor("ze...)` vgg_face_descriptor = Model(input=model.layers[0].input, output=model.layers[-2].output)
+Here we can see that the new api of keras, the input and output should be inputs and outputs
+(found but did not use)
+pip install sklearn
+pip install -r requirements.txt
+
+
+problem with keras version:
+Conv2D TypeError: __init()__ takes at least 4 arguments (4 given) 
+related error:steps_per_epoch argument in fit_generator()
+solution:pip install --upgrade keras
+
+
+ from keras.applications.imagenet_utils import _obtain_input_shape
+ImportError: cannot import name _obtain_input_shape
+vi /usr/local/lib/python2.7/dist-packages/keras_vggface/models.py
+from keras_applications.imagenet_utils import _obtain_input_shape 
+Notice: It is keras_applications instead of keras.application
+  links: vggpred.py ----https://github.com/rcmalli/keras-vggface
+https://sefiks.com/2018/08/06/deep-face-recognition-with-keras/
+
+vi /usr/local/lib/python2.7/dist-packages/keras_vggface/utils.py
+vi /usr/local/lib/python2.7/dist-packages/keras_vggface/models.py
+pip install keras_vggface
+ pip install keras_vggface --no-dependencies
+pip install pillow
+
+vi /usr/local/lib/python2.7/dist-packages/keras_vggface/models.py
+replace( problem with keras 2.2.2
+from keras.applications.imagenet_utils import _obtain_input_shape (this)
+with
+from keras_applications.imagenet_utils import _obtain_input_shape
+ImportError: cannot import name _obtain_input_shape
+
+from keras_applications.imagenet_utils import _obtain_input_shape
+
+softmax axis prob
+tried to upgrade tensorflow
+used only pip instead
+sudo pip3 install --upgrade tensorflow
+from keras.utils.vis_utils import plot_model
+pip install pydot
+
+ImportError: No module named _tkinter, please install the python-tk package
+i used ----
+import matplotlib
+matplotlib.use("Agg")
+
+https://keras.io/callbacks/#example-model-checkpoints( you can save best intermediate results)
+https://medium.com/@ageitgey/machine-learning-is-fun-part-4-modern-face-recognition-with-deep-learning-c3cffc121d78(openface link)
+metrics for machine learning
+https://medium.com/greyatom/performance-metrics-for-classification-problems-in-machine-learning-part-i-b085d432082b(metrics for machine learning)
+https://medium.com/nanonets/how-to-use-deep-learning-when-you-have-limited-data-part-2-data-augmentation-c26971dc8ced( data augmentation)
+https://machinelearningmastery.com/visualize-deep-learning-neural-network-model-keras/(visualize model)
+https://github.com/rcmalli/keras-vggface(vggface fine tuning- weights are downloade from him)
+https://medium.com/@thimblot/data-augmentation-boost-your-image-dataset-with-few-lines-of-python-155c2dc1baec(code for data augmentation)
+https://gist.github.com/tomahim/9ef72befd43f5c106e592425453cb6ae(code for data augmentation)
+https://github.com/rcmalli/keras-vggface/blob/master/README.md(VGGFace)
